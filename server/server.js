@@ -1,11 +1,16 @@
+require("dotenv").config();
+const mongoose = require("mongoose");
 const express = require("express");
+const connectDB = require("./config/db");
+
+
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
+app.use(express.json());
 
 app.get("/", (req, res)=> {
     res.send("Home Page");
 });
-
 
 
 app.get("/api/health", (req, res)=>{
@@ -15,6 +20,25 @@ app.get("/api/health", (req, res)=>{
     })
 });
 
-app.listen(port, ()=> {
-    console.log(`Server running on the port ${port}`);
-});
+
+app.get("/api/db-health", (req, res)=> {
+    const isConnected = mongoose.connection.readyState === 1
+    res.status(isConnected ? 200 : 503).json({
+        database : isConnected ? "connected" : "Not Connected"
+    });
+})
+
+const startServer = async ()=>{
+    try {
+        await connectDB();
+        app.listen(port, ()=> {
+            console.log(`Server running on the port ${port}`);
+        });
+    } catch(error) {
+        console.log("Failed to Start Server", error.message);
+        process.exit(1);
+    }
+}
+
+startServer();
+
