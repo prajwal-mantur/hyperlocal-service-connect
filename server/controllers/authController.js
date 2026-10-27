@@ -1,6 +1,7 @@
 
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 module.exports.registerUser = async (req, res) => {
     try {
@@ -83,3 +84,67 @@ module.exports.registerUser = async (req, res) => {
         });
     }
 };
+
+module.exports.loginUser = async(req, res)=> {
+    try {
+
+    
+    let {email, password} = req.body;
+
+    if( !email || !password) {
+        return res.status(400).json({
+            message : "Email and Password are required fields"
+        });
+    }
+
+    if (typeof email !== "string" || typeof password !== "string") {
+            return res.status(400).json({
+                message: "Email and password must be strings"
+            });
+        }
+
+
+    email = email.trim().toLowerCase();
+    if(email === "") {
+        return res.status(400).json({
+            message : "Email cannot be empty"
+        });
+    }
+    
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({
+            message: "Invalid email format"
+        });
+    }
+
+    let user = await User.findOne({email});
+    if(!user) {
+        return res.status(401).json({
+            message : "Invalid Email or Password"
+        });
+    };
+    let validatePassword = await bcrypt.compare(password, user.passwordHash);
+    if(!validatePassword) {
+        return res.status(401).json({
+            message : "Invalid Email or Password"
+        });
+    };
+
+    const payload = {
+        id : user._id,
+        email : user.email,
+        role : user.role
+    };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn : "7d"});
+    return res.status(200).json({
+        success : true,
+        token : token
+    });
+    } catch (error) {
+        console.error("LogIn failed", error.message);
+        return res.status(500).json({
+            message : "Internal Server Error"
+        });
+    };
+}   
