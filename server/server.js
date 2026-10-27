@@ -9,6 +9,7 @@ app.use(express.json());
 
 
 const authRoutes = require("./routes/authRoutes");
+const { isLoggedIn } = require("./middleware/authMiddleware");
 app.get("/", (req, res)=> {
     res.send("Home Page");
 });
