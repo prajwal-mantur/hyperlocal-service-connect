@@ -10,6 +10,7 @@ app.use(express.json());
 
 const authRoutes = require("./routes/authRoutes");
 const { isLoggedIn } = require("./middleware/authMiddleware");
+const { allowedRoles } = require("./middleware/roleMiddleware");
 app.get("/", (req, res)=> {
     res.send("Home Page");
 });
@@ -44,5 +45,15 @@ const startServer = async ()=>{
 
 app.use("/api/auth", authRoutes);
 app.use("api/auth", authRoutes);
+
+
+// Code for testing the role based authorization
+
+// app.use("/auth/test-role", isLoggedIn, allowedRoles(["admin", "customer"]), (req, res)=>{
+//     return res.status(200).json({
+//         success : "U are authorized person"
+//     });
+// });
+
 startServer();
 
